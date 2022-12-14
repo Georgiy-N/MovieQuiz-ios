@@ -35,6 +35,9 @@ final class MovieQuizViewController: UIViewController {
     private var currentQuestionIndex = 0
     private var countCorrectAnswer = 0
     
+    @IBOutlet private weak var noButton: UIButton!
+    @IBOutlet private weak var yesButton: UIButton!
+    
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLable: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
@@ -44,10 +47,12 @@ final class MovieQuizViewController: UIViewController {
         self.showStep(quiz: convert(model: questions[currentQuestionIndex]))
     }
     
-    @IBAction private func YesButtonClicked(_ sender: UIButton) {
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        switchButton()
         showAnswerResult(isCorrect: true)
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        switchButton()
         showAnswerResult(isCorrect: false)
     }
     
@@ -67,6 +72,7 @@ final class MovieQuizViewController: UIViewController {
         })
         alert.addAction(action)
         self.present(alert, animated: true, completion: nil)
+        switchButton()
     }
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(named: model.image) ?? UIImage(), question: model.text, questionNumber: "\(currentQuestionIndex + 1)/\(questions.count)")
@@ -92,8 +98,13 @@ final class MovieQuizViewController: UIViewController {
             showResult(quiz: resultViewModel)
         } else {
             (currentQuestionIndex += 1)
+            switchButton()
             showStep(quiz: convert(model: questions[currentQuestionIndex]))
         }
         self.imageView.layer.borderWidth = 0
+    }
+    private func switchButton() {
+        yesButton.isEnabled = !yesButton.isEnabled
+        noButton.isEnabled = !noButton.isEnabled
     }
 }
