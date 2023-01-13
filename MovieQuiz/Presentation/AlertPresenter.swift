@@ -7,9 +7,9 @@
 
 import UIKit
 
-class AlertPresenter : AlertPresenterProtocol {
+class AlertPresenter: AlertPresenterProtocol {
     
-    weak var delegate : AlertPresenterDelegate?
+    weak var delegate: AlertPresenterDelegate?
     
     init(delegate: AlertPresenterDelegate) {
         self.delegate = delegate
@@ -19,13 +19,13 @@ class AlertPresenter : AlertPresenterProtocol {
         let alert = UIAlertController(title: result.title,
                                       message: result.message,
                                       preferredStyle: .alert)
-
+        
         let alertAction = UIAlertAction(title: result.buttonText, style: .default) { _ in
             result.completion()
         }
-
+        
         alert.addAction(alertAction)
-
+        
         delegate?.presentAlert(alert: alert)
     }
 }

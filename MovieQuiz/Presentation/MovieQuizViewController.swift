@@ -1,7 +1,7 @@
 import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate  {
-
+    
     
     private var currentQuestionIndex = 0
     private var countCorrectAnswer = 0
@@ -28,7 +28,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         statisticService = StatisticServiceImplementation()
     }
     // MARK: - QuestionFactoryDelegate
-
+    
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
@@ -55,7 +55,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         textLable.text = step.question
         counterLabel.text = step.questionNumber
     }
-
+    
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(named: model.image) ?? UIImage(), question: model.text, questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
@@ -94,7 +94,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                         Рекорд: \(record) (\(dataFormatted))
                         Средняя точность: \(totalAcc)%
                         """
-
+            
             let alertModel = AlertModel (title: "Этот раунд окончен!", message: text, buttonText: "Сыграть еще раз", completion:  { [weak self] in
                 guard let self = self else { return }
                 self.currentQuestionIndex = 0
@@ -115,8 +115,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     func presentAlert(alert: UIAlertController) {
-            present(alert, animated: true)
-            switchButton()
-        }
+        present(alert, animated: true)
+        switchButton()
+    }
 }
 

@@ -1,7 +1,9 @@
 import Foundation
 
-class QuestionFactory : QuestionFactoryProtocol {
-    private let questions : [QuizQuestion] = [
+class QuestionFactory: QuestionFactoryProtocol {
+    weak var delegate: QuestionFactoryDelegate?
+    
+    private let questions: [QuizQuestion] = [
         QuizQuestion(image: "The Godfather", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
         QuizQuestion(image: "The Dark Knight", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
         QuizQuestion(image: "Kill Bill", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
@@ -14,9 +16,6 @@ class QuestionFactory : QuestionFactoryProtocol {
         QuizQuestion(image: "Vivarium", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false)
     ]
     
-    weak var delegate: QuestionFactoryDelegate?
-    
-    
     func requestNextQuestion() {
         guard let index = (0..<questions.count).randomElement() else {
             delegate?.didReceiveNextQuestion(question: nil)
@@ -25,7 +24,7 @@ class QuestionFactory : QuestionFactoryProtocol {
         
         let question = questions[safe: index]
         delegate?.didReceiveNextQuestion(question: question)
-    } 
+    }
     
     init(delegate: QuestionFactoryDelegate) {
         self.delegate = delegate
