@@ -40,13 +40,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             return
         }
         activityIndicator.stopAnimating()
-        buttonsIsEnabled()
         currentQuestion = question
         buttonsIsEnabled()
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.showStep(quiz: viewModel)
         }
+        buttonsIsEnabled()
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
@@ -122,10 +122,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         }
         self.imageView.layer.borderWidth = 0
     }
-//    private func switchButton() {
-//        yesButton.isEnabled = !yesButton.isEnabled
-//        noButton.isEnabled = !noButton.isEnabled
-//    }
     
     private func buttonsIsEnabled() {
         yesButton.isEnabled = true

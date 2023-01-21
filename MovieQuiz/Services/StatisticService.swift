@@ -68,8 +68,6 @@ final class StatisticServiceImplementation: StatisticService {
         let newGame = GameRecord(correct: count, total: amount, date: Date())
         if bestGame < newGame {
             bestGame = newGame
-            print(bestGame)
-            print(newGame)
         }
         if gamesCount == 0 {
             totalAccuracy = (Double(newGame.correct) / Double(newGame.total))
