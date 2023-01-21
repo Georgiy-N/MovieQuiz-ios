@@ -3,8 +3,9 @@ import Foundation
 /// Отвечает за загрузку данных по URL
 struct NetworkClient {
 
-    private enum NetworkError: Error {
+    enum NetworkError: Error {
         case codeError
+        case emptyArrayItems
     }
     
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {

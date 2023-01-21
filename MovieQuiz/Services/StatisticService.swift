@@ -13,6 +13,9 @@ struct GameRecord: Codable, Comparable {
     let date: Date
     
     static func < (lhs: GameRecord, rhs: GameRecord) -> Bool {
+        if lhs.total == 0 {
+            return true
+        }
         let lhsAccuracy: Double = Double(lhs.correct) / Double(lhs.total)
         let rhsAccurary: Double = Double(rhs.correct) / Double(rhs.total)
         return lhsAccuracy < rhsAccurary
@@ -44,7 +47,7 @@ final class StatisticServiceImplementation: StatisticService {
         get {
             guard let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
                   let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
-                return .init(correct: 0, total: 0, date: Date())
+                  return .init(correct: 0, total: 0, date: Date())
             }
             return record
         }
@@ -66,6 +69,7 @@ final class StatisticServiceImplementation: StatisticService {
         if bestGame < newGame {
             bestGame = newGame
             print(bestGame)
+            print(newGame)
         }
         if gamesCount == 0 {
             totalAccuracy = (Double(newGame.correct) / Double(newGame.total))

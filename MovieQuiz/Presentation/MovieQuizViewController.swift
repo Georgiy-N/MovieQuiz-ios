@@ -24,10 +24,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     override func viewDidLoad() {
         super.viewDidLoad()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        
+        imageView.layer.cornerRadius = 20
         alertPresenter = AlertPresenter(delegate: self)
         statisticService = StatisticServiceImplementation()
-        showLoadingIndicator()
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.startAnimating()
+        activityIndicator.color = .ypRed
         questionFactory?.loadData()
         
     }
@@ -37,8 +39,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         guard let question = question else {
             return
         }
-        
+        activityIndicator.stopAnimating()
+        buttonsIsEnabled()
         currentQuestion = question
+        buttonsIsEnabled()
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.showStep(quiz: viewModel)
@@ -46,16 +50,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        switchButton()
+        buttonsIsDisable()
         showAnswerResult(isCorrect: true)
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        switchButton()
+        buttonsIsDisable()
         showAnswerResult(isCorrect: false)
     }
     
     private func showStep(quiz step: QuizStepViewModel) {
-        imageView.image = step.image
+        UIView.transition(with: imageView,
+                          duration: 0.3,
+                          options: .transitionCrossDissolve,
+                          animations: { self.imageView.image = step.image},
+                          completion: nil)
         textLable.text = step.question
         counterLabel.text = step.questionNumber
     }
@@ -108,37 +116,40 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             alertPresenter?.showResult(result: alertModel)
         } else {
             (currentQuestionIndex += 1)
-            switchButton()
+            activityIndicator.startAnimating()
             questionFactory?.requestNextQuestion()
+            buttonsIsEnabled()
         }
         self.imageView.layer.borderWidth = 0
     }
-    private func switchButton() {
-        yesButton.isEnabled = !yesButton.isEnabled
-        noButton.isEnabled = !noButton.isEnabled
+//    private func switchButton() {
+//        yesButton.isEnabled = !yesButton.isEnabled
+//        noButton.isEnabled = !noButton.isEnabled
+//    }
+    
+    private func buttonsIsEnabled() {
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
     }
+    private func buttonsIsDisable() {
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+    }
+    
     
     func presentAlert(alert: UIAlertController) {
         present(alert, animated: true)
-        switchButton()
-    }
-    private func showLoadingIndicator() {
-        activityIndicator.isHidden = false
-        activityIndicator.startAnimating()
+        buttonsIsDisable()
     }
     
-    private func hideLoadingIndicator() {
-        activityIndicator.isHidden = true
+    func showNetworkError(message: String) {
         activityIndicator.stopAnimating()
-    }
-    
-    private func showNetworkError(message: String) {
-        hideLoadingIndicator()
         let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз") { [weak self] in
             guard let self = self else { return }
             self.currentQuestionIndex = 0
             self.countCorrectAnswer = 0
             self.questionFactory?.requestNextQuestion()
+            self.buttonsIsDisable()
         }
         alertPresenter?.showResult(result: model)
     }
@@ -146,7 +157,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
     }
     func didLoadDataFromServer() {
-        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        activityIndicator.stopAnimating() 
         questionFactory?.requestNextQuestion()
     }
 }
