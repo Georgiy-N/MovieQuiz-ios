@@ -11,6 +11,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private var alertPresenter: AlertPresenter?
     private var statisticService: StatisticService?
     
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     
@@ -22,10 +23,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        questionFactory = QuestionFactory(delegate: self)
-        questionFactory?.requestNextQuestion()
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        imageView.layer.cornerRadius = 20
         alertPresenter = AlertPresenter(delegate: self)
         statisticService = StatisticServiceImplementation()
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.startAnimating()
+        activityIndicator.color = .ypRed
+        questionFactory?.loadData()
+        
     }
     // MARK: - QuestionFactoryDelegate
     
@@ -33,8 +39,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         guard let question = question else {
             return
         }
-        
+        activityIndicator.stopAnimating()
+        buttonsIsEnabled()
         currentQuestion = question
+        buttonsIsEnabled()
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.showStep(quiz: viewModel)
@@ -42,22 +50,26 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        switchButton()
+        buttonsIsDisable()
         showAnswerResult(isCorrect: true)
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        switchButton()
+        buttonsIsDisable()
         showAnswerResult(isCorrect: false)
     }
     
     private func showStep(quiz step: QuizStepViewModel) {
-        imageView.image = step.image
+        UIView.transition(with: imageView,
+                          duration: 0.3,
+                          options: .transitionCrossDissolve,
+                          animations: { self.imageView.image = step.image},
+                          completion: nil)
         textLable.text = step.question
         counterLabel.text = step.questionNumber
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(image: UIImage(named: model.image) ?? UIImage(), question: model.text, questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
+        return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(), question: model.text, questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     private func showAnswerResult(isCorrect: Bool) {
         guard let currentQuestion = currentQuestion else {
@@ -104,19 +116,49 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             alertPresenter?.showResult(result: alertModel)
         } else {
             (currentQuestionIndex += 1)
-            switchButton()
+            activityIndicator.startAnimating()
             questionFactory?.requestNextQuestion()
+            buttonsIsEnabled()
         }
         self.imageView.layer.borderWidth = 0
     }
-    private func switchButton() {
-        yesButton.isEnabled = !yesButton.isEnabled
-        noButton.isEnabled = !noButton.isEnabled
+//    private func switchButton() {
+//        yesButton.isEnabled = !yesButton.isEnabled
+//        noButton.isEnabled = !noButton.isEnabled
+//    }
+    
+    private func buttonsIsEnabled() {
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
     }
+    private func buttonsIsDisable() {
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+    }
+    
     
     func presentAlert(alert: UIAlertController) {
         present(alert, animated: true)
-        switchButton()
+        buttonsIsDisable()
+    }
+    
+    func showNetworkError(message: String) {
+        activityIndicator.stopAnimating()
+        let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            self.currentQuestionIndex = 0
+            self.countCorrectAnswer = 0
+            self.questionFactory?.requestNextQuestion()
+            self.buttonsIsDisable()
+        }
+        alertPresenter?.showResult(result: model)
+    }
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
+    func didLoadDataFromServer() {
+        activityIndicator.stopAnimating() 
+        questionFactory?.requestNextQuestion()
     }
 }
 
