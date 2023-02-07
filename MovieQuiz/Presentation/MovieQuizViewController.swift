@@ -1,8 +1,9 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
     
     private var presenter: MovieQuizPresenter!
+    var alertPresenter: AlertPresenter?
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var noButton: UIButton!
@@ -16,6 +17,7 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
+        alertPresenter = AlertPresenter(delegate: self)
         imageView.layer.cornerRadius = 20
         activityIndicator.hidesWhenStopped = true
         activityIndicator.startAnimating()
@@ -70,6 +72,11 @@ final class MovieQuizViewController: UIViewController {
         } else {
             imageView.layer.borderColor = UIColor.ypRed.cgColor
         }
+    }
+    
+    func presentAlert(alert: UIAlertController) {
+        present(alert, animated: true)
+        buttonsIsDisable()
     }
 }
 

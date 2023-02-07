@@ -1,11 +1,10 @@
 import UIKit
 
-final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate {
+final class MovieQuizPresenter: QuestionFactoryDelegate {
     private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
-    private var alertPresenter: AlertPresenter?
-    private var countCorrectAnswer = 0
-    private var currentQuestion: QuizQuestion?
+    var countCorrectAnswer = 0
+    var currentQuestion: QuizQuestion?
     private weak var viewController: MovieQuizViewController?
     private var questionFactory: QuestionFactoryProtocol?
     private let statisticService: StatisticService!
@@ -15,8 +14,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkClient()), delegate: self)
         questionFactory?.loadData()
-        alertPresenter = AlertPresenter(delegate: self)
-        
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
@@ -79,7 +76,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
                 guard let self = self else { return }
                 self.resetQuestionIndex()
             })
-            alertPresenter?.showResult(result: alertModel)
+            viewController?.alertPresenter?.showResult(result: alertModel)
         } else {
             switchToNextQuestion()
             viewController?.activityIndicator.startAnimating()
@@ -97,11 +94,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
         questionFactory?.requestNextQuestion()
     }
     
-    func presentAlert(alert: UIAlertController) {
-        viewController?.present(alert, animated: true)
-        viewController?.buttonsIsDisable()
-    }
-    
     func showNetworkError(message: String) {
         viewController?.activityIndicator.stopAnimating()
         let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз") { [weak self] in
@@ -109,7 +101,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
             self.resetQuestionIndex()
             self.viewController?.buttonsIsDisable()
         }
-        alertPresenter?.showResult(result: model)
+        viewController?.alertPresenter?.showResult(result: model)
     }
     
     private func showAnswerResult(isCorrect: Bool) {
