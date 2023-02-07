@@ -1,47 +1,49 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate {
-    let questionsAmount: Int = 10
+    private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
-    var alertPresenter: AlertPresenter?
-    var countCorrectAnswer = 0
-    var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
+    private var alertPresenter: AlertPresenter?
+    private var countCorrectAnswer = 0
+    private var currentQuestion: QuizQuestion?
+    private weak var viewController: MovieQuizViewController?
     private var questionFactory: QuestionFactoryProtocol?
+    private let statisticService: StatisticService!
     
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
-        
+        statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkClient()), delegate: self)
         questionFactory?.loadData()
         alertPresenter = AlertPresenter(delegate: self)
+        
     }
     
-    func convert(model: QuizQuestion) -> QuizStepViewModel {
+    private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(), question: model.text, questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
     
-    func isLastQuestion() -> Bool {
+    private func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
     }
     
-    func resetQuestionIndex() {
+    private func resetQuestionIndex() {
         currentQuestionIndex = 0
         countCorrectAnswer = 0
         questionFactory?.requestNextQuestion()
     }
     
-    func switchToNextQuestion() {
+    private func switchToNextQuestion() {
         currentQuestionIndex += 1
     }
     
     func yesButtonClicked() {
-        viewController?.showAnswerResult(isCorrect: true)
+        showAnswerResult(isCorrect: true)
     }
     
     func noButtonClicked() {
-        viewController?.showAnswerResult(isCorrect: false)
+        showAnswerResult(isCorrect: false)
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -57,10 +59,10 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
         viewController?.buttonsIsEnabled()
     }
     
-    func showNextQuestionOrResults() {
+    private func showNextQuestionOrResults() {
         
         if isLastQuestion() {
-            guard let statisticService = viewController?.statisticService else { return }
+            guard let statisticService = statisticService else { return }
             statisticService.store(correct: countCorrectAnswer, total: questionsAmount)
             
             let totalAcc = String(format: "%.2f", statisticService.totalAccuracy * 100)
@@ -76,8 +78,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
             let alertModel = AlertModel (title: "Этот раунд окончен!", message: text, buttonText: "Сыграть еще раз", completion:  { [weak self] in
                 guard let self = self else { return }
                 self.resetQuestionIndex()
-                self.countCorrectAnswer = 0
-                self.questionFactory?.requestNextQuestion()
             })
             alertPresenter?.showResult(result: alertModel)
         } else {
@@ -86,7 +86,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
             questionFactory?.requestNextQuestion()
             viewController?.buttonsIsEnabled()
         }
-        viewController?.imageView.layer.borderWidth = 0
+        viewController?.imageViewBoarderZero()
     }
     
     func didFailToLoadData(with error: Error) {
@@ -110,6 +110,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate, AlertPresenterDelegate 
             self.viewController?.buttonsIsDisable()
         }
         alertPresenter?.showResult(result: model)
+    }
+    
+    private func showAnswerResult(isCorrect: Bool) {
+        viewController?.highlightImageBorder(isCorrect: isCorrect)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {[weak self] in
+            guard let self = self else {return}
+            self.showNextQuestionOrResults()
+        }
     }
 }
 

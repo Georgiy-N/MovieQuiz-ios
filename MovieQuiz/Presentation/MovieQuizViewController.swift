@@ -2,17 +2,12 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController {
     
-    
-    
-    
-    var statisticService: StatisticService?
     private var presenter: MovieQuizPresenter!
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
-    
-    @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLable: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
     
@@ -22,8 +17,6 @@ final class MovieQuizViewController: UIViewController {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
         imageView.layer.cornerRadius = 20
-        
-        statisticService = StatisticServiceImplementation()
         activityIndicator.hidesWhenStopped = true
         activityIndicator.startAnimating()
         activityIndicator.color = .ypRed
@@ -50,7 +43,20 @@ final class MovieQuizViewController: UIViewController {
     }
     
     
-    func showAnswerResult(isCorrect: Bool) {
+   func buttonsIsEnabled() {
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
+    }
+    func buttonsIsDisable() {
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+    }
+    
+    func imageViewBoarderZero() {
+        imageView.layer.borderWidth = 0
+    }
+    
+    func highlightImageBorder(isCorrect: Bool) {
         guard let currentQuestion = presenter.currentQuestion else {
             return
         }
@@ -64,21 +70,6 @@ final class MovieQuizViewController: UIViewController {
         } else {
             imageView.layer.borderColor = UIColor.ypRed.cgColor
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {[weak self] in
-            guard let self = self else {return}
-            self.presenter.showNextQuestionOrResults()
-        }
-    }
-    
-    
-   func buttonsIsEnabled() {
-        yesButton.isEnabled = true
-        noButton.isEnabled = true
-    }
-    func buttonsIsDisable() {
-        yesButton.isEnabled = false
-        noButton.isEnabled = false
     }
 }
 
