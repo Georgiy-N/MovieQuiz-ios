@@ -5,18 +5,18 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var currentQuestionIndex: Int = 0
     var countCorrectAnswer = 0
     var currentQuestion: QuizQuestion?
-    private weak var viewController: MovieQuizViewController?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     private var questionFactory: QuestionFactoryProtocol?
     private let statisticService: StatisticService!
     
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkClient()), delegate: self)
         questionFactory?.loadData()
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(), question: model.text, questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
@@ -25,14 +25,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         currentQuestionIndex == questionsAmount - 1
     }
     
-    private func resetQuestionIndex() {
+    private func switchToNextQuestion() {
+        currentQuestionIndex += 1
+    }
+    
+    func resetQuestionIndex() {
         currentQuestionIndex = 0
         countCorrectAnswer = 0
         questionFactory?.requestNextQuestion()
-    }
-    
-    private func switchToNextQuestion() {
-        currentQuestionIndex += 1
     }
     
     func yesButtonClicked() {
@@ -87,21 +87,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+        viewController?.showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
     }
     func didLoadDataFromServer() {
         viewController?.activityIndicator.stopAnimating()
         questionFactory?.requestNextQuestion()
-    }
-    
-    func showNetworkError(message: String) {
-        viewController?.activityIndicator.stopAnimating()
-        let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз") { [weak self] in
-            guard let self = self else { return }
-            self.resetQuestionIndex()
-            self.viewController?.buttonsIsDisable()
-        }
-        viewController?.alertPresenter?.showResult(result: model)
+        viewController?.self.activityIndicator.stopAnimating()
     }
     
     private func showAnswerResult(isCorrect: Bool) {
@@ -110,6 +101,9 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             guard let self = self else {return}
             self.showNextQuestionOrResults()
         }
+    }
+    func showNetworkError(message: String) {
+        viewController?.showNetworkError(message: message)
     }
 }
 

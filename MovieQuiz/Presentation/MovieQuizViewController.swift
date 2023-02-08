@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
+final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, MovieQuizViewControllerProtocol {
     
     private var presenter: MovieQuizPresenter!
     var alertPresenter: AlertPresenter?
@@ -45,7 +45,7 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
     }
     
     
-   func buttonsIsEnabled() {
+    func buttonsIsEnabled() {
         yesButton.isEnabled = true
         noButton.isEnabled = true
     }
@@ -77,6 +77,16 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
     func presentAlert(alert: UIAlertController) {
         present(alert, animated: true)
         buttonsIsDisable()
+    }
+    
+    func showNetworkError(message: String) {
+        activityIndicator.stopAnimating()
+        let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            self.presenter.resetQuestionIndex()
+            self.buttonsIsDisable()
+        }
+        alertPresenter?.showResult(result: model)
     }
 }
 
