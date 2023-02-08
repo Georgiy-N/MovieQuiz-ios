@@ -2,8 +2,8 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, MovieQuizViewControllerProtocol {
     
-    private var presenter: MovieQuizPresenter!
     var alertPresenter: AlertPresenter?
+    private var presenter: MovieQuizPresenter!
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var noButton: UIButton!
@@ -11,9 +11,7 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLable: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
-    
-    
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
@@ -25,15 +23,6 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
         
     }
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        buttonsIsDisable()
-        presenter.yesButtonClicked()
-    }
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
-        buttonsIsDisable()
-        presenter.noButtonClicked()
-    }
-    
     func showStep(quiz step: QuizStepViewModel) {
         UIView.transition(with: imageView,
                           duration: 0.3,
@@ -43,7 +32,6 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
         textLable.text = step.question
         counterLabel.text = step.questionNumber
     }
-    
     
     func buttonsIsEnabled() {
         yesButton.isEnabled = true
@@ -87,6 +75,15 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
             self.buttonsIsDisable()
         }
         alertPresenter?.showResult(result: model)
+    }
+    
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        buttonsIsDisable()
+        presenter.yesButtonClicked()
+    }
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
+        buttonsIsDisable()
+        presenter.noButtonClicked()
     }
 }
 
