@@ -1,11 +1,22 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, MovieQuizViewControllerProtocol {
+protocol MovieQuizViewControllerProtocol : AnyObject {
+    func showStep(quiz step: QuizStepViewModel)
+    func enableButtons()
+    func disableButtons()
+    func removeImageBorder()
+    func highlightImageBorder(isCorrect: Bool)
+    func showNetworkError(message: String)
+    func activityIndicatorStartAnimation()
+    func activityIndicatorStopAnimation()
+    func alertPresenterShowResult(message: String)
+}
+
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol, AlertPresenterDelegate {
     
-    var alertPresenter: AlertPresenter?
     private var presenter: MovieQuizPresenter!
-    
-    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    private var alertPresenter: AlertPresenter?
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var imageView: UIImageView!
@@ -14,13 +25,20 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        presenter = MovieQuizPresenter(viewController: self)
         alertPresenter = AlertPresenter(delegate: self)
+        presenter = MovieQuizPresenter(viewController: self)
         imageView.layer.cornerRadius = 20
         activityIndicator.hidesWhenStopped = true
         activityIndicator.startAnimating()
         activityIndicator.color = .ypRed
-        
+    }
+    
+    func activityIndicatorStartAnimation() {
+         activityIndicator.startAnimating()
+    }
+    
+    func activityIndicatorStopAnimation() {
+         activityIndicator.stopAnimating()
     }
     
     func showStep(quiz step: QuizStepViewModel) {
@@ -33,16 +51,16 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
         counterLabel.text = step.questionNumber
     }
     
-    func buttonsIsEnabled() {
+    func enableButtons() {
         yesButton.isEnabled = true
         noButton.isEnabled = true
     }
-    func buttonsIsDisable() {
+    func disableButtons() {
         yesButton.isEnabled = false
         noButton.isEnabled = false
     }
     
-    func imageViewBoarderZero() {
+    func removeImageBorder() {
         imageView.layer.borderWidth = 0
     }
     
@@ -56,15 +74,10 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
         imageView.layer.cornerRadius = 20
         if currentQuestion.correctAnswer == isCorrect {
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
-            presenter.countCorrectAnswer += 1
+            presenter.increaceCorrectCount()
         } else {
             imageView.layer.borderColor = UIColor.ypRed.cgColor
         }
-    }
-    
-    func presentAlert(alert: UIAlertController) {
-        present(alert, animated: true)
-        buttonsIsDisable()
     }
     
     func showNetworkError(message: String) {
@@ -72,17 +85,30 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
         let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз") { [weak self] in
             guard let self = self else { return }
             self.presenter.resetQuestionIndex()
-            self.buttonsIsDisable()
+            self.disableButtons()
         }
         alertPresenter?.showResult(result: model)
     }
     
+    func presentAlert(alert: UIAlertController) {
+        present(alert, animated: true)
+        disableButtons()
+    }
+    
+    func alertPresenterShowResult(message: String) {
+        let alertModel = AlertModel (title: "Этот раунд окончен!", message: message, buttonText: "Сыграть еще раз", completion:  { [weak self] in
+            guard let self = self else { return }
+            self.presenter.resetQuestionIndex()
+        })
+        alertPresenter?.showResult(result: alertModel)
+    }
+    
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        buttonsIsDisable()
+        disableButtons()
         presenter.yesButtonClicked()
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        buttonsIsDisable()
+        disableButtons()
         presenter.noButtonClicked()
     }
 }

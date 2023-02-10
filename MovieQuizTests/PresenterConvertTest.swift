@@ -1,24 +1,8 @@
 import XCTest
 @testable import MovieQuiz
 
-final class MovieQuizViewControllerProtocolMock: MovieQuizViewControllerProtocol {
-    var activityIndicator: UIActivityIndicatorView!
-    
-    var alertPresenter: MovieQuiz.AlertPresenter?
-    
+final class MovieQuizViewControllerMock: MovieQuizViewControllerProtocol {
     func showStep(quiz step: MovieQuiz.QuizStepViewModel) {
-        
-    }
-    
-    func buttonsIsEnabled() {
-        
-    }
-    
-    func buttonsIsDisable() {
-        
-    }
-    
-    func imageViewBoarderZero() {
         
     }
     
@@ -26,18 +10,40 @@ final class MovieQuizViewControllerProtocolMock: MovieQuizViewControllerProtocol
         
     }
     
-    func presentAlert(alert: UIAlertController) {
-        
-    }
-    
     func showNetworkError(message: String) {
         
     }
+    
+    func enableButtons() {
+        
+    }
+    
+    func disableButtons() {
+        
+    }
+    
+    func removeImageBorder() {
+        
+    }
+    
+    func activityIndicatorStartAnimation() {
+        
+    }
+    
+    func activityIndicatorStopAnimation() {
+        
+    }
+    
+    func alertPresenterShowResult(message: String) {
+        
+    }
+    
+    
 }
 
 final class MovieQuizPresenterTests: XCTestCase {
     func testPresenterConvertModel() throws {
-        let viewControllerMock = MovieQuizViewControllerProtocolMock()
+        let viewControllerMock = MovieQuizViewControllerMock()
         let sut = MovieQuizPresenter(viewController: viewControllerMock)
         
         let emptyData = Data()

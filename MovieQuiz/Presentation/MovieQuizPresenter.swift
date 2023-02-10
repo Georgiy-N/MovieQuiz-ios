@@ -2,13 +2,14 @@ import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
     
-    var countCorrectAnswer = 0
     var currentQuestion: QuizQuestion?
+    private var countCorrectAnswer = 0
     private let questionsAmount: Int = 10
-    private let statisticService: StatisticService!
+    private let statisticService: StatisticService?
     private var currentQuestionIndex: Int = 0
     private var questionFactory: QuestionFactoryProtocol?
     private weak var viewController: MovieQuizViewControllerProtocol?
+    
     
     
     init(viewController: MovieQuizViewControllerProtocol) {
@@ -26,6 +27,11 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         viewController?.showNetworkError(message: message)
     }
     
+    func increaceCorrectCount() {
+         countCorrectAnswer += 1
+    }
+    
+        
     func resetQuestionIndex() {
         currentQuestionIndex = 0
         countCorrectAnswer = 0
@@ -44,22 +50,38 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         guard let question = question else {
             return
         }
-        viewController?.activityIndicator.stopAnimating()
+        viewController?.activityIndicatorStopAnimation()
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.viewController?.showStep(quiz: viewModel)
         }
-        viewController?.buttonsIsEnabled()
+        viewController?.enableButtons()
     }
     
     func didFailToLoadData(with error: Error) {
         viewController?.showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
     }
     func didLoadDataFromServer() {
-        viewController?.activityIndicator.stopAnimating()
+        viewController?.activityIndicatorStopAnimation()
         questionFactory?.requestNextQuestion()
-        viewController?.self.activityIndicator.stopAnimating()
+        viewController?.activityIndicatorStopAnimation()
+    }
+    
+    func makeResultMessage() -> String {
+        if let statisticService = statisticService {
+            statisticService.store(correct: countCorrectAnswer, total: questionsAmount)
+            let totalAcc = String(format: "%.2f", statisticService.totalAccuracy * 100)
+            let dataFormatted = statisticService.bestGame.date.dateTimeString
+            let record = "\(statisticService.bestGame.correct)/\(statisticService.bestGame.total)"
+            let resultMessage = """
+                    Ваш результат: \(countCorrectAnswer)/\(questionsAmount)
+                    Количество сыгранных квизов: \(statisticService.gamesCount)
+                    Рекорд: \(record) (\(dataFormatted))
+                    Средняя точность: \(totalAcc)%
+                    """
+            return resultMessage
+        }    else { return "Сервис статистики не доступен" }
     }
     
     private func showAnswerResult(isCorrect: Bool) {
@@ -81,32 +103,18 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private func showNextQuestionOrResults() {
         
         if isLastQuestion() {
-            guard let statisticService = statisticService else { return }
-            statisticService.store(correct: countCorrectAnswer, total: questionsAmount)
-            
-            let totalAcc = String(format: "%.2f", statisticService.totalAccuracy * 100)
-            let dataFormatted = statisticService.bestGame.date.dateTimeString
-            let record = "\(statisticService.bestGame.correct)/\(statisticService.bestGame.total)"
-            let text = """
-                        Ваш результат: \(countCorrectAnswer)/\(questionsAmount)
-                        Количество сыгранных квизов: \(statisticService.gamesCount)
-                        Рекорд: \(record) (\(dataFormatted))
-                        Средняя точность: \(totalAcc)%
-                        """
-            
-            let alertModel = AlertModel (title: "Этот раунд окончен!", message: text, buttonText: "Сыграть еще раз", completion:  { [weak self] in
-                guard let self = self else { return }
-                self.resetQuestionIndex()
-            })
-            viewController?.alertPresenter?.showResult(result: alertModel)
+            let text = makeResultMessage()
+            viewController?.alertPresenterShowResult(message: text)
         } else {
             switchToNextQuestion()
-            viewController?.activityIndicator.startAnimating()
+            viewController?.activityIndicatorStartAnimation()
             questionFactory?.requestNextQuestion()
-            viewController?.buttonsIsEnabled()
+            viewController?.enableButtons()
         }
-        viewController?.imageViewBoarderZero()
+        viewController?.removeImageBorder()
     }
 }
+    
+    
 
 
